@@ -6,7 +6,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.acme.task_executor.task.TaskFramework;
+import org.acme.task_executor.task.PullTaskFramework;
+import org.acme.task_executor.task.PushTaskFramework;
 import org.acme.task_executor.task.TaskFrameworkStarter;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
@@ -24,28 +25,31 @@ import org.openjdk.jmh.infra.Blackhole;
 @State(Scope.Thread)
 public class TaskFrameworkBenchmark {
 
-	private TaskFramework framework;
+	private PullTaskFramework pullFramework;
+	private PushTaskFramework pushFramework;
 	private ExecutorService executor;
 
 	@Setup(Level.Trial)
 	public void setup() {
-		framework = TaskFrameworkStarter.withFixedPoolSize(4);
+		pullFramework = TaskFrameworkStarter.pullWithFixedPoolSize(4);
+		pushFramework = TaskFrameworkStarter.pushWithFixedPoolSize(4);
 		executor = Executors.newFixedThreadPool(4);
 	}
 
 	@TearDown(Level.Trial)
 	public void tearDown() throws InterruptedException {
-		framework.shutdown();
+		pullFramework.shutdown();
+		pushFramework.shutdown();
 		executor.shutdown();
 	}
 
 	@Benchmark
-	public void customThreadPoolBenchmark(Blackhole blackhole) throws InterruptedException {
+	public void customPullThreadPoolBenchmark(Blackhole blackhole) throws InterruptedException {
 		AtomicInteger counter = new AtomicInteger();
 		CountDownLatch latch = new CountDownLatch(20);
 
 		for (int i = 0; i < 20; i++) {
-			framework.submit(() -> {
+			pullFramework.submit(() -> {
 				counter.incrementAndGet();
 				latch.countDown();
 			});
@@ -55,6 +59,24 @@ public class TaskFrameworkBenchmark {
 	    blackhole.consume(counter.get());
 
 	}
+	
+	@Benchmark
+	public void customPushThreadPoolBenchmark(Blackhole blackhole) throws InterruptedException {
+		AtomicInteger counter = new AtomicInteger();
+		CountDownLatch latch = new CountDownLatch(20);
+
+		for (int i = 0; i < 20; i++) {
+			pushFramework.submit(() -> {
+				counter.incrementAndGet();
+				latch.countDown();
+			});
+		}
+
+		latch.await();
+	    blackhole.consume(counter.get());
+
+	}
+	
 
 	@Benchmark
 	public void executorServiceBenchmark(Blackhole blackhole) throws InterruptedException {

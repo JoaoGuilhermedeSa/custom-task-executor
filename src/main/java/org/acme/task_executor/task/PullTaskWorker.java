@@ -2,12 +2,12 @@ package org.acme.task_executor.task;
 
 import java.util.concurrent.BlockingQueue;
 
-class TaskWorker extends Thread {
+class PullTaskWorker extends Thread {
 
 	private volatile boolean shuttingDown = false;
 	private BlockingQueue<Runnable> taskQueue;
 
-	protected TaskWorker(String name, BlockingQueue<Runnable> taskQueue) {
+	protected PullTaskWorker(String name, BlockingQueue<Runnable> taskQueue) {
 		super(name);
 		this.taskQueue = taskQueue;
 	}
