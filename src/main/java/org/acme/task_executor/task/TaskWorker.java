@@ -14,6 +14,7 @@ class TaskWorker extends Thread {
 
 	protected void shutDown() {
 		this.shuttingDown = true;
+		this.interrupt();
 	}
 
 	@Override

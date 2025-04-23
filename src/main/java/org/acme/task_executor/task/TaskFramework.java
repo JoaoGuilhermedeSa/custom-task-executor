@@ -33,12 +33,10 @@ public class TaskFramework {
 		isActive = false;
 		
 		System.out.println("TaskFramework is shutting down. No new tasks will be accepted");
-		for (TaskWorker worker : workers) {
-			worker.shutDown();
-		}
 
 		for (TaskWorker worker : workers) {
 			try {
+				worker.shutDown();
 				worker.join();
 			} catch (InterruptedException e) {
 				System.err.println("Interrupted while waiting for worker to terminate: " + worker.getName());
